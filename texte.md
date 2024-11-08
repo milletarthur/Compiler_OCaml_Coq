@@ -1,6 +1,6 @@
 # Analyse syntaxique et sémantique
 
-## Exercice 1.1.2
+## Exercice 1.1.2 - 1.1.4
 
 DIGIT := '0'|'1'
 VARIABLE := 'a'|'b'|'c'|'d'
@@ -22,3 +22,10 @@ WHILE := 'w(' EXPRESSION '){' SEQUENCE '}'
 PROGRAMME := ASSIGN | IF | WHILE 
 
 SEQUENCE := PROGRAMME SEQUENCE | PROGRAMME | SKIP
+
+## Exercice 1.2.1
+
+$$\frac{[expr]_{s1} = \text{false  s1} \xrightarrow{\text{else Q}} s3 }{s1 \xrightarrow{\text{If expr then P else Q}} s3}$$
+
+$$\frac{[expr]_{s1} = \text{true  s1} \xrightarrow{\text{then P}} s2 }{s1 \xrightarrow{\text{If expr then P else Q}} s2}$$
+
