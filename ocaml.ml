@@ -40,22 +40,22 @@ let element : (exp,char) ranalist = fun (cl:char list) ->
 
 let rec assign : (programme,char) ranalist = fun (cl:char list) ->
   cl |> terminal_res variable_rananlist ++> fun var ->
-      terminal ':' --> terminal '=' -+> expression ++> fun e1 ->
-        epsilon_res (Assign(var,e1))
+      terminal ':' --> terminal '=' -+> expression ++> fun e ->
+        epsilon_res (Assign(var,e))
 and op_binaire_op expr : (exp,char) ranalist = fun (cl:char list) ->
   cl |> (terminal_res op_binaire_rananlist ++>
          fun op ->
-           expression ++> fun e2 -> epsilon_res (Bin(expr,op,e2)))
+           expression ++> fun e -> epsilon_res (Bin(expr,op,e)))
         +|
         epsilon_res expr
 and expression : (exp,char) ranalist = fun (cl:char list) ->
   cl |> (terminal '(' -+> expression ++>
-         fun e3 -> terminal ')' -+> op_binaire_op e3)
+         fun e -> terminal ')' -+> op_binaire_op e)
         +|
         (terminal_res op_unaire_rananlist ++>
-         fun op -> expression ++> fun e4 -> epsilon_res (Uni(op,e4)))
+         fun op -> expression ++> fun e -> epsilon_res (Uni(op,e)))
         +|
-        (element ++> fun e5 -> op_binaire_op e5);;
+        (element ++> fun e -> op_binaire_op e);;
 
 assign (list_of_string "a:=0");;
 assign (list_of_string "b:=1");;
