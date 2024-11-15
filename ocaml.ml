@@ -37,25 +37,38 @@ let element : (exp,char) ranalist = fun (cl:char list) ->
         +|
         (terminal_res variable_rananlist ++> fun var -> epsilon_res (Var(var)));;
 
-
-let rec assign : (programme,char) ranalist = fun (cl:char list) ->
-  cl |> terminal_res variable_rananlist ++> fun var ->
-      terminal ':' --> terminal '=' -+> expression ++> fun e ->
-        epsilon_res (Assign(var,e))
-and op_binaire_op expr : (exp,char) ranalist = fun (cl:char list) ->
-  cl |> (terminal_res op_binaire_rananlist ++>
-         fun op ->
-           expression ++> fun e -> epsilon_res (Bin(expr,op,e)))
+let rec expression : (exp,char) ranalist = fun (cl:char list) ->
+  cl |> expression_point ++> fun e -> expression_suite e
+and expression_suite expr : (exp,char) ranalist = fun (cl:char list) ->
+  cl |> (terminal '+' -+> expression_point ++>
+         fun e -> expression_suite (Bin(expr,'+',e)) ++>
+                  fun e2 -> epsilon_res e2)
         +|
         epsilon_res expr
-and expression : (exp,char) ranalist = fun (cl:char list) ->
+and expression_point : (exp,char) ranalist = fun (cl:char list) ->
+  cl |> expression_autre ++> fun e -> expression_point_suite e
+and expression_point_suite expr : (exp,char) ranalist = fun (cl:char list) ->
+  cl |> (terminal '.' -+> expression_autre ++>
+         fun e -> expression_point_suite (Bin(expr,'.',e)) ++>
+                  fun e2 -> epsilon_res e2)
+        +|
+        epsilon_res expr
+and expression_autre : (exp,char) ranalist = fun (cl:char list) ->
   cl |> (terminal '(' -+> expression ++>
-         fun e -> terminal ')' -+> op_binaire_op e)
+         fun e -> terminal ')' -+> epsilon_res e)
         +|
         (terminal_res op_unaire_rananlist ++>
-         fun op -> expression ++> fun e -> epsilon_res (Uni(op,e)))
+         fun op -> expression_autre ++> fun e -> epsilon_res (Uni(op,e)))
         +|
-        (element ++> fun e -> op_binaire_op e);;
+        (element)
+;;
+
+
+let assign : (programme,char) ranalist = fun (cl:char list) ->
+  cl |> terminal_res variable_rananlist ++> fun var ->
+      terminal ':' --> terminal '=' -+> expression ++> fun e ->
+        epsilon_res (Assign(var,e));;
+
 
 assign (list_of_string "a:=0");;
 assign (list_of_string "b:=1");;
@@ -68,9 +81,10 @@ expression (list_of_string "a+b");;
 expression (list_of_string "a.b");;
 expression (list_of_string "!a");;
 expression (list_of_string "!0");;
-expression (list_of_string "a+0");;
+expression (list_of_string "a.b+0");;
+expression (list_of_string "a+b.0");;
 expression (list_of_string "0.a");;
 
-
-let _ = assert ((expression (list_of_string "a+b+(!c)"))
-                = (expression (list_of_string "(a+b)+(!c)")));
+expression (list_of_string "a+b+c");;
+let _ = assert ((expression (list_of_string "a+b+c"))
+                = (expression (list_of_string "(a+b)+c")));
