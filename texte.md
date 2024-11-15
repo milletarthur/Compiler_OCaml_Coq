@@ -26,7 +26,7 @@ PROGRAMME := ASSIGN | IF | WHILE
 
 SEQUENCE := PROGRAMME ';' SEQUENCE | PROGRAMME | SKIP
 
-## Exercice 1.2.1
+## Exercice 1.2.1     
 
 $$\frac{[expr]_{s1} = \text{false  s1} \xrightarrow{\text{else Q}} s3 }{s1 \xrightarrow{\text{If expr then P else Q}} s3}$$
 
