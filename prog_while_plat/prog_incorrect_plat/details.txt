@@ -1,0 +1,14 @@
+Programmes de test de base
+
+prog1 --> tester un digit autre que 0 ou 1
+prog2 --> variable autre que a,b,c,d
+prog3 --> opérateurs autre que + . !
+prog4 --> utiliser ! en tant qu'opérateur binaire
+prog5 --> utiliser + ou . en tant qu'opérateur unaire
+prog6 --> digit à gauche d'un assignement
+prog7 --> expression à gauche d'un assignement
+prog8 --> parenthèses juste avant un opérateur binaire
+prog9 --> parenthèse ouverte mais pas fermée
+prog10 --> parenthèse pas ouverte mais fermée
+prog11 --> pas de ; entre 2 instructions
+prog12 --> pas de if dans la condition d'un while ou inversement
