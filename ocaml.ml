@@ -74,3 +74,65 @@ expression (list_of_string "0.a");;
 
 let _ = assert ((expression (list_of_string "a+b+(!c)"))
                 = (expression (list_of_string "(a+b)+(!c)")));
+
+  
+(*=====================================Exercice 2.2.1=====================================*)
+
+type value = Exp of exp | Uninitialised;;
+type state = value list;;
+
+let v1 : value = Uninitialised;;
+let v2 : value = Exp(Digit(1));;
+let v3 : value = Exp(Var('a'));;
+let v4 : value = Exp(Uni('!',Var('b')));;
+let v5 : value = Exp(Bin(Var('c'),'+',Digit(1)));;
+let l : value list = [v1;v2;v1;v3;v4;v1;v5];;
+
+let rec update (i : int)(e : value)(s : state) : state =
+  match i,s with
+  | 0, [] -> [e]
+  | _, [] ->  Uninitialised::(update (i-1) e [])
+  | 0, h::t -> e::t
+  | _, h::t -> h::(update (i-1) e t)
+;;
+
+let rec exptobool (e : exp) (s : state) : bool =
+  match e with
+    | Bin(e1,'+',e2) -> (exptobool e1 s) || (exptobool e2 s)
+    | Bin(e1,'.',e2) -> (exptobool e1 s) && (exptobool e2 s)
+    | Uni('!',e1) -> not (exptobool e1 s)
+    | Var var -> get ((Char.code 'a') - (Char.code var)) s
+    | Digit d -> d=1
+    | _ -> false
+and valuetobool (v : value) (s : state) : bool =
+  match v with
+  | Uninitialised -> false
+  | Exp(e) -> (exptobool e s)
+and get (x:int) (s:state) : bool =
+  match x,s with
+  | 0, [v]  -> valuetobool v s
+  | _, _::l1 -> get (x-1) l1
+  | _, _ -> false
+;;
+
+let exptovalue (e : exp) : value =
+  let b=(exptobool e []) in if(b) then Exp(Digit(1)) else Exp(Digit(0))
+;;
+
+let rec eval(p : programme)(s : state) : state =
+  match p with
+  | Skip -> s
+  | Assign(v,e) -> update (Char.code('a') - Char.code(v)) (exptovalue e) s
+  | Sequence(p1,p2) -> evalW p2 (evalW p1 s)
+  | If(e,p1,p2) ->
+    (match (exptobool e s) with
+    | true -> evalW p1 s
+    | false -> evalW p2 s)
+  | While(e,p1) ->(
+    match (exptobool e s) with
+    | true -> let s1 = (evalW p1 s) in (evalW p s1)
+    | false -> s
+  )
+;;
+
+(*faire des tests en utilisants les programmes parsés*)
