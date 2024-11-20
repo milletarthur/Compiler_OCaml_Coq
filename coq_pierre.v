@@ -196,3 +196,99 @@ Proof.
     + cbn. eapply SN_While_false.
       cbn. reflexivity.
 Qed.
+
+Inductive SN1_Seq i1 i2 s s2 : Prop :=
+| SN1_Seq_intro : forall s1,
+                  SN i1 s s1 -> SN i2 s1 s2 -> SN1_Seq i1 i2 s s2
+.
+
+(** On peut alors démontrer la conséquence suivante d'une hypothèse
+    respectant la condition (1) ci-dessus *)
+
+Lemma inv_Seq' : forall {i1 i2 s s2}, SN (Seq i1 i2) s s2 -> SN1_Seq i1 i2 s s2.
+Proof.
+  intros i1 i2 s s2 sn.
+  (** Ici in utilise une tactique magique de Coq. *)
+  inversion sn.
+  (** Puis une autre, pour nettoyer les égalités. *)
+  subst.
+  apply (SN1_Seq_intro _ _ _ _ _ H1 H4).
+Qed.
+
+Inductive SN1_trivial (s s1 : state) : Prop := Triv : SN1_trivial s s1.
+
+Definition dispatch (i: winstr) : state -> state -> Prop :=
+  match i with
+  | Seq i1 i2 => SN1_Seq i1 i2
+  | _ => SN1_trivial
+  end.
+
+Definition SN_inv {i s s2} (sn : SN i s s2) : dispatch i s s2 :=
+  match sn with
+  | SN_Seq i1 i2 s s1 s2 sn1 sn2 =>
+    SN1_Seq_intro _ _ _ _ s1 sn1 sn2
+  | _ => Triv _ _
+  end.
+
+Lemma inv_Seq : forall {i1 i2 s s2}, SN (Seq i1 i2) s s2 -> SN1_Seq i1 i2 s s2.
+Proof.
+  intros * sn. apply (SN_inv sn).
+Qed.
+
+(** *** Illustration *)
+(** Une autre manière d'exprimer la sémantique de WHILE ;
+    on prouvera que SN et SN' sont équivalentes. *)
+Inductive SN': winstr -> state -> state -> Prop :=
+| SN'_Skip        : forall s,
+                    SN' Skip s s
+| SN'_Assign      : forall x a s,
+                    SN' (Assign x a) s (update s x (evalA a s))
+| SN'_Seq         : forall i1 i2 s s1 s2,
+                    SN' i1 s s1 -> SN' i2 s1 s2 -> SN' (Seq i1 i2) s s2
+| SN'_If_true     : forall b i1 i2 s s1,
+                    (evalB b s = true)  ->  SN' i1 s s1 -> SN' (If b i1 i2) s s1
+| SN'_If_false    : forall b i1 i2 s s2,
+                    (evalB b s = false) ->  SN' i2 s s2 -> SN' (If b i1 i2) s s2
+| SN'_While_false : forall b i s,
+                    (evalB b s = false) ->  SN' (While b i) s s
+| SN'_While_true  : forall b i s s1,
+                    (evalB b s = true)  ->  SN' (Seq i (While b i)) s s1 ->
+                    SN' (While b i) s s1
+.
+
+(*=====================================Exercice 2.3.2=====================================*)
+
+(** La direction suivante ne pose pas de nouvelle difficulté *)
+Lemma SN_SN' : forall i s s1, SN i s s1 -> SN' i s s1.
+Proof.
+  intros i s s1 sn.
+  induction sn as  [ (* SN_Skip *) s
+                   | (* SN_Assign *) x s a
+                   | (* SN_Seq *) i1 i2 s s1 s' sn1 hrec_sn1 sn2 hrec_sn2
+                   | (* SN_If_true *) cond i1 i2 s s' e sn hrec_sn
+                   | (* SN_If_false *) cond i1 i2 s s' e sn hrec_sn
+                   | (* SN_While_false *) cond i s hrec_sn
+                   | (* SN_While_true *) cond i s1 s2 s3 e
+                       sn1 hrec_sn1 sn2 hrec_sn2
+                   ].
+  - apply SN'_Skip.
+  - apply SN'_Assign.
+  - eapply SN'_Seq.
+    + apply hrec_sn1.
+    + apply hrec_sn2.
+  - apply SN'_If_true.
+    + apply e.
+    + apply hrec_sn.
+  - apply SN'_If_false.
+    + apply e.
+    + apply hrec_sn.
+  - apply SN'_While_false.
+    apply hrec_sn.
+  - apply SN'_While_true.
+    + apply e.
+    + eapply SN'_Seq.
+      -- apply hrec_sn1.
+      -- apply hrec_sn2.
+Qed.
+
+
