@@ -1,7 +1,7 @@
 (*=====================================Exercice 1.1.1=====================================*)
 
 type var = char;;
-type exp = Bin of exp*char*exp | Uni of char*exp | Var of var | Digit of int;;
+type exp = And of exp*exp | Or of exp*exp | Not of exp | Var of var | Digit of int;;
 type assign = var * exp;;
 
 type programme = Skip | Assign of assign | Sequence of programme*programme | If of exp*programme*programme | While of exp*programme;;
@@ -48,7 +48,7 @@ let rec expression : (exp,char) ranalist = fun (cl:char list) ->
         fun e -> consume_void -+> expression_suite e
 and expression_suite expr : (exp,char) ranalist = fun (cl:char list) ->
   cl |> (terminal '+' --> consume_void -+> expression_point ++>
-         fun e -> consume_void -+> expression_suite (Bin(expr,'+',e)) ++>
+         fun e -> consume_void -+> expression_suite (Or(expr,e)) ++>
                   fun e2 -> consume_void -+> epsilon_res e2)
         +|
         epsilon_res expr
@@ -56,7 +56,7 @@ and expression_point : (exp,char) ranalist = fun (cl:char list) ->
   cl |> expression_autre ++> fun e -> consume_void -+> expression_point_suite e
 and expression_point_suite expr : (exp,char) ranalist = fun (cl:char list) ->
   cl |> (consume_void --> terminal '.' --> consume_void -+> expression_autre ++>
-         fun e -> consume_void -+> expression_point_suite (Bin(expr,'.',e)) ++>
+         fun e -> consume_void -+> expression_point_suite (And(expr,e)) ++>
                   fun e2 -> consume_void -+> epsilon_res e2)
         +|
         epsilon_res expr
@@ -66,7 +66,7 @@ and expression_autre : (exp,char) ranalist = fun (cl:char list) ->
         +|
         (terminal_res op_unaire_rananlist ++>
          fun op -> consume_void -+> expression_autre ++>
-                   fun e -> consume_void -+> epsilon_res (Uni(op,e)))
+                   fun e -> consume_void -+> epsilon_res (Not(e)))
         +|
         (consume_void -+> element ++> fun e -> consume_void -+> epsilon_res e)
 ;;
@@ -138,8 +138,8 @@ type state = value list;;
 let v1 : value = Uninitialised;;
 let v2 : value = Exp(Digit(1));;
 let v3 : value = Exp(Var('a'));;
-let v4 : value = Exp(Uni('!',Var('b')));;
-let v5 : value = Exp(Bin(Var('c'),'+',Digit(1)));;
+let v4 : value = Exp(Not(Var('b')));;
+let v5 : value = Exp(Or(Var('c'),Digit(1)));;
 let l : value list = [v1;v2;v1;v3;v4;v1;v5];;
 
 let rec update (i : int)(e : value)(s : state) : state =
@@ -152,9 +152,9 @@ let rec update (i : int)(e : value)(s : state) : state =
 
 let rec exptobool (e : exp) (s : state) : bool =
   match e with
-    | Bin(e1,'+',e2) -> (exptobool e1 s) || (exptobool e2 s)
-    | Bin(e1,'.',e2) -> (exptobool e1 s) && (exptobool e2 s)
-    | Uni('!',e1) -> not (exptobool e1 s)
+    | Or(e1,e2) -> (exptobool e1 s) || (exptobool e2 s)
+    | And(e1,e2) -> (exptobool e1 s) && (exptobool e2 s)
+    | Not(e1) -> not (exptobool e1 s)
     | Var var -> get ((Char.code var) - (Char.code 'a')) s
     | Digit d -> d=1
     | _ -> false
