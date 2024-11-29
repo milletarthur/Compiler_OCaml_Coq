@@ -403,3 +403,92 @@ Proof.
     + apply IHh1.
       apply h2.
 Qed.
+
+
+(*=====================================Exercice 3.1.2=====================================*)
+
+
+Lemma SOS_Pcarre_2_1er_tour : SOS (Inter Pcarre_2 [0;0;1]) (Inter Pcarre_2 [1; 1; 3]).
+Proof.
+  eapply SOS_again; cbn.
+  { apply SOS1_While. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_If_true; reflexivity. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_Seqi. cbv. eapply SOS1_Seqf.
+    apply SOS1_Assign.}
+  eapply SOS_again; cbn.
+  { eapply SOS1_Seqi. eapply SOS1_Seqf.
+    apply SOS1_Assign.}
+  eapply SOS_again; cbn.
+  { eapply SOS1_Seqf. apply SOS1_Assign. }
+  cbn.
+  apply SOS_stop.
+Qed.
+
+
+
+Theorem SOS_Pcarre_inf_1er_tour : SOS (Inter Pcarre_inf [0;0;1]) (Inter Pcarre_inf [1; 1; 3]).
+Proof.
+  eapply SOS_again; cbn.
+  { cbv. apply SOS1_While. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_If_true. cbn. reflexivity. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_Seqi; eapply SOS1_Seqf.
+    apply SOS1_Assign. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_Seqi; eapply SOS1_Seqf.
+    apply SOS1_Assign. }
+   eapply SOS_again; cbn.
+  { eapply SOS1_Seqf.
+    apply SOS1_Assign. }
+  cbn. apply SOS_stop.
+Qed.
+
+(** 
+L'énoncé de SOS_Pcarre_inf_1er_tour signifie que si on éxecute le corps corps_carre en partant de :
+	i = 0, x = 0 et y = 1. 
+On finira forcement par atteindre un état intermédiare où:
+	i = 1, x = 1 et y = 3. 
+Le nom du théorème nous indique que cet état est surement atteint à la fin du 1er tour d'execution.
+*)
+
+
+(* L'énoncé de SOS_Pcarre_2_2e_tour signifie que si on éxecute le corps corps_carre en partant de :
+	i = 1, x = 1 et y = 3. 
+On finira par atteindre un état intermédiare où:
+	i = 2, x = 4 et y = 5. 
+Le nom du théorème nous indique que cet état est surement le 2eme tour d'execution du programme Pcarre_2.
+*)
+
+
+(* L'énoncé de SOS_Pcarre_2_fini signifie que si on éxecute le corps corps_carre en partant de :
+	i = 2, x = 4 et y = 5. 
+On finira par atteindre un état Final où:
+	i = 2, x = 4 et y = 5. 
+Et donc que c'est la fin de l'execution de Pcarre_2.
+*)
+
+Theorem SOS_Pcarre_2_fini : SOS (Inter Pcarre_2 [2; 4; 5]) (Final [2; 4; 5]).
+Proof.
+  eapply SOS_again; cbv; cbn.
+  { eapply SOS1_While. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_If_false. cbn. reflexivity. }
+  eapply SOS_again.
+  { apply SOS1_Skip. }
+  eapply SOS_stop.
+Qed.
+
+Theorem SOS_Pcarre_2_fin_V1 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
+Proof.
+  apply SOS_trans with (Inter Pcarre_2 [1; 1; 3]).
+  - apply SOS_Pcarre_2_1er_tour.
+  - apply SOS_trans with (Inter Pcarre_2 [2; 4; 5]).
+    + apply SOS_Pcarre_2_2e_tour.
+    + apply SOS_Pcarre_2_fini.
+Qed.
+
+
+(*=====================================Exercice 3.3.3=====================================*)
