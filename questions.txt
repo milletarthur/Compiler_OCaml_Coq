@@ -1,0 +1,1 @@
+Exercice 3.1.1 : signification du "théorème" SOS_Seq ??? (Fixepoint SOS_Seqf ???)

@@ -173,6 +173,7 @@ Definition Pcarre_2 := While (Bnot (Beqnat Ir (Aco 2))) corps_carre.
 Definition Pcarre n := While (Bnot (Beqnat Ir (Aco n))) corps_carre.
 
 
+
 (*=====================================Exercice 2.3.1=====================================*)
 
 Theorem reduction_Pcarre_2 : SN (Pcarre_2) [0;0;1] [2;4;5].
@@ -340,4 +341,65 @@ Proof.
       -- apply e.
       -- apply sn1.
       -- apply sn2.
+Qed.
+
+(*=====================Partie 3 : Preuves sur la SOS=================*)
+
+
+(** * SOS (Sémantique opérationnelle à petits pas) du langage While *)
+
+Inductive config :=
+| Inter : winstr -> state -> config
+| Final : state -> config.
+
+(* La relation pour un pas de SOS *)
+
+Inductive SOS_1: winstr -> state -> config -> Prop :=
+| SOS1_Skip     : forall s,
+                 SOS_1 Skip s (Final s)
+
+| SOS1_Assign   : forall x a s,
+                 SOS_1 (Assign x a) s (Final (update s x (evalA a s)))
+
+| SOS1_Seqf     : forall i1 i2 s s1,
+                 SOS_1 i1 s (Final s1) ->
+                 SOS_1 (Seq i1 i2) s (Inter i2 s1)
+| SOS1_Seqi     : forall i1 i1' i2 s s1,
+                 SOS_1 i1 s (Inter i1' s1) ->
+                 SOS_1 (Seq i1 i2) s (Inter (Seq i1' i2) s1)
+
+| SOS1_If_true  : forall b i1 i2 s,
+                 evalB b s = true  ->
+                 SOS_1 (If b i1 i2) s (Inter i1 s)
+| SOS1_If_false : forall b i1 i2 s,
+                 evalB b s = false ->
+                 SOS_1 (If b i1 i2) s (Inter i2 s)
+
+| SOS1_While    : forall b i s,
+                 SOS_1 (While b i) s (Inter (If b (Seq i (While b i)) Skip) s)
+.
+
+(** Fermeture réflexive-transitive de SOS_1 *)
+(** Cette sémantique donne toutes les configurations atteignables
+    par un (AST de) programme en partant d'un état initial.
+ *)
+
+Inductive SOS : config -> config -> Prop :=
+| SOS_stop  : forall c, SOS c c
+| SOS_again : forall i1 s1 c2 c3,
+              SOS_1 i1 s1 c2 -> SOS c2 c3 ->
+              SOS (Inter i1 s1) c3.
+
+
+(*===========================Exercice 3.1.1===========================*)
+
+Theorem SOS_trans : forall c1 c2 c3, SOS c1 c2 -> SOS c2 c3 -> SOS c1 c3.
+Proof.
+  intros c1 c2 c3 h1 h2.
+  induction h1.
+  - apply h2.
+  - eapply SOS_again.
+    + apply H.
+    + apply IHh1.
+      apply h2.
 Qed.
