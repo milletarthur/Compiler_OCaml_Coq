@@ -597,7 +597,7 @@ Proof.
   apply SOS_stop.
 Qed.
 
-(* expliquer la démo *)
+(* expliquer la démo*)
 Theorem SOS_Pcarre_2_fin_V2 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
   eapply SOS_trans.
