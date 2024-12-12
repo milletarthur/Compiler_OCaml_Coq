@@ -171,7 +171,7 @@ Definition incrY := Assign Yl (Apl N2 Yr).
 Definition corps_carre := Seq incrI (Seq incrX incrY).
 Definition Pcarre_2 := While (Bnot (Beqnat Ir (Aco 2))) corps_carre.
 Definition Pcarre n := While (Bnot (Beqnat Ir (Aco n))) corps_carre.
-
+Definition Pcarre_inf := While Btrue corps_carre.
 
 
 (*=====================================Exercice 2.3.1=====================================*)
@@ -481,6 +481,24 @@ Proof.
   eapply SOS_stop.
 Qed.
 
+Lemma SOS_Pcarre_2_2e_tour : SOS (Inter Pcarre_2 [1; 1; 3]) (Inter Pcarre_2 [2; 4; 5]).
+Proof.
+  eapply SOS_again.
+  { cbv. eapply SOS1_While. }
+  eapply SOS_again.
+  { eapply SOS1_If_true. reflexivity. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_Seqi. eapply SOS1_Seqf.
+    apply SOS1_Assign. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_Seqi. eapply SOS1_Seqf.
+    apply SOS1_Assign. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_Seqf. apply SOS1_Assign. }
+  cbn.
+  eapply SOS_stop.
+Qed.
+
 Theorem SOS_Pcarre_2_fin_V1 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
   apply SOS_trans with (Inter Pcarre_2 [1; 1; 3]).
@@ -490,5 +508,281 @@ Proof.
     + apply SOS_Pcarre_2_fini.
 Qed.
 
+(*=====================================Exercice 3.8.1=====================================*)
 
-(*=====================================Exercice 3.3.3=====================================*)
+Fixpoint SOS_seqf i1 i2 s1 s2 (so : SOS (Inter i1 s1) (Final s2)) :
+  SOS (Inter (Seq i1 i2) s1) (Inter i2 s2).
+Proof.
+  inversion so; subst.
+  destruct c2.
+  - eapply SOS_again.
+    { eapply SOS1_Seqi.
+      apply H1. }
+    apply SOS_seqf.
+    apply H3.
+  - inversion H3. subst.
+    eapply SOS_again.
+    { eapply SOS1_Seqf.
+      apply H1. }
+    apply SOS_stop.
+Qed.
+
+(*=====================================Exercice 3.1.3=====================================*)
+Lemma Sn_2 n : S n + S n = S (S (n + n)).
+Proof. ring. Qed.
+
+Lemma Sn_carre n : S n * S n = S (n + n + n * n).
+Proof. ring. Qed.
+
+Definition invar_cc n := [n; n*n; S (n+n)].
+
+
+(* donner signification *)
+Theorem SOS_corps_carre n : SOS (Inter corps_carre (invar_cc n)) (Final (invar_cc (S n))).
+Proof.
+  cbv [invar_cc corps_carre].
+  eapply SOS_again.
+  { eapply SOS1_Seqf.
+    apply SOS1_Assign. }
+  eapply SOS_again.
+  { eapply SOS1_Seqf.
+    apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Assign. }
+  cbn.
+  rewrite <- Sn_2, <- Sn_carre.
+  apply SOS_stop.
+Qed.
+
+(* donner signification *)
+Lemma SOS_corps_carre_inter n i :
+  SOS (Inter (Seq corps_carre i) (invar_cc n)) (Inter i (invar_cc (S n))).
+Proof.
+  apply SOS_seqf.
+  apply SOS_corps_carre.  
+Qed.
+
+(* donner signification *)
+Lemma SOS_Pcarre_tour :
+  forall n i, eqnatb i n = false ->
+  SOS (Inter (Pcarre n) (invar_cc i)) (Inter (Pcarre n) (invar_cc (S i))).
+Proof.
+  intros n i H.
+  eapply SOS_again.
+  { cbv. apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. rewrite H. cbn. reflexivity. }
+  { apply SOS_corps_carre_inter. }
+Qed.
+
+Lemma eqnatb_refl : forall n, eqnatb n n = true.
+Proof.
+  intro n.
+  induction n.
+  - cbn; reflexivity.
+  - cbn; apply IHn.
+Qed.
+
+(* donner signification *)
+Theorem SOS_Pcarre_n_fini :
+  forall n, SOS (Inter (Pcarre n) (invar_cc n)) (Final (invar_cc n)).
+Proof.
+  intro n.
+  eapply SOS_again; cbv [Pcarre]; cbn.
+  { eapply SOS1_While. }
+  eapply SOS_again; cbn.
+  { eapply SOS1_If_false. cbn. rewrite eqnatb_refl. reflexivity. }
+  eapply SOS_again; cbn.
+  { apply SOS1_Skip. }
+  apply SOS_stop.
+Qed.
+
+(* expliquer la démo *)
+Theorem SOS_Pcarre_2_fin_V2 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
+Proof.
+  eapply SOS_trans.
+  { apply SOS_Pcarre_tour. reflexivity. }
+  eapply SOS_trans.
+  { apply SOS_Pcarre_tour. reflexivity. }
+  eapply SOS_trans.
+  { apply SOS_Pcarre_n_fini. }
+  apply SOS_stop.
+Qed.
+
+(* donner signification *)
+Lemma SOS_Pcarre_inf_tour :
+  forall i,
+  SOS (Inter Pcarre_inf (invar_cc i)) (Inter Pcarre_inf (invar_cc (S i))).
+Proof.
+  intro i.
+   eapply SOS_again.
+  { cbv. apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. reflexivity. }
+  apply SOS_corps_carre_inter.
+Qed.
+
+(* donner signification *)
+Theorem SOS_Pcarre_inf_i :
+  forall i,
+  SOS (Inter Pcarre_inf [0; 0; 1]) (Inter Pcarre_inf (invar_cc i)).
+Proof.
+  intro i.
+  induction i; cbv [invar_cc]; cbn.
+  - apply SOS_stop.
+  - eapply SOS_trans.
+    + apply IHi.
+    + apply SOS_Pcarre_inf_tour.
+Qed.
+
+(*=====================================Exercice 3.1.4=====================================*)
+
+Fixpoint f_SOS_1 (i : winstr) (s : state) : config :=
+  match i with
+  | Skip       => Final s
+  | Assign x a => Final (update s x (evalA a s))
+  | Seq i1 i2  => let c := f_SOS_1 i1 s
+                  in ( match c with
+                       | Final s1    => (Inter i2 s1)
+                       | Inter i3 s3 => (Inter (Seq i3 i2) s3)
+                       end
+                     )
+  | If b i1 i2 => if (evalB b s)
+                  then Inter i1 s
+                  else Inter i2 s
+  | While b i1 => Inter (If b (Seq i1 (While b i1)) Skip) s
+  end.
+
+
+(** PC = pt de contrôle *)
+Definition PC0 := Pcarre_2.
+Eval cbn in (f_SOS_1 PC0 [0;0;1]).
+
+(** Il faut un peu désosser le code pour y retrouver les points de contrôle *)
+
+Definition PC2 := Seq corps_carre PC0.
+Definition PC1 := If (Bnot (Beqnat Ir (Aco 2))) PC2 Skip.
+
+(** On vérifie la progression *)
+Fact fa1 : f_SOS_1 PC0 [0;0;1] = Inter PC1 [0;0;1]. cbn. reflexivity. Qed.
+Eval cbn in (f_SOS_1 PC1 [0;0;1]).
+(** Continuer, on retombe sur PC0 après quelques étapes. *)
+
+
+Lemma SOS_Pcarre_2_1er_tour_V1 :
+  SOS (Inter Pcarre_2 [0;0;1]) (Inter Pcarre_2 [1; 1; 3]).
+Proof.
+  change Pcarre_2 with PC0.
+  apply SOS_again with (Inter PC1 [0;0;1]).
+  { apply SOS1_While. }
+  apply SOS_again with (f_SOS_1 PC1 [0;0;1]).
+  { apply SOS1_If_true. cbn. reflexivity. }
+  cbn.
+  apply SOS_again with (f_SOS_1 PC2 [0;0;1]).
+  { cbn. apply SOS1_Seqi.
+    apply SOS1_Seqf.
+    apply SOS1_Assign. } 
+  cbn.
+  apply SOS_again with (f_SOS_1 (Seq (Seq incrX incrY) PC0) [1;0;1]).
+  { apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  cbn.
+  apply SOS_again with (f_SOS_1 (Seq incrY PC0) [1;1;1]).
+  { apply SOS1_Seqf. apply SOS1_Assign. }
+  cbn.
+  apply SOS_stop.
+Qed.
+
+
+(*=====================================Exercice 3.8.3=====================================*)
+
+Lemma util1 :
+  forall i j,
+    negb (eqnatb i (i + S j)) = true.
+Proof.
+  intros i j.
+  induction i.
+  - cbn. reflexivity.
+  - cbn. apply IHi.
+Qed.
+
+Lemma SOS_Pcarre_n_i_plus :
+  forall i d,
+    SOS (Inter (Pcarre (i + d)) [0; 0; 1]) (Inter (Pcarre (i + d)) (invar_cc i)).
+Proof.
+  intro i.
+  induction i.
+  - intro d. apply SOS_stop.
+  - intro j.
+    Search ( _ + _ = _ + _).
+    rewrite Nat.add_succ_comm.
+    eapply SOS_trans.
+    + apply IHi.
+    + eapply SOS_again.
+      { apply SOS1_While. }
+      eapply SOS_again.
+      { apply SOS1_If_true. cbn.  apply util1.}
+      eapply SOS_again.
+      { eapply SOS1_Seqi. cbv [corps_carre].
+        eapply SOS1_Seqf. cbv [incrI].
+        apply SOS1_Assign. }
+      cbn.
+      eapply SOS_again.
+      { eapply SOS1_Seqi. eapply SOS1_Seqf.
+        apply SOS1_Assign. }
+      cbn.
+      eapply SOS_again.
+      { eapply SOS1_Seqf. apply SOS1_Assign. }
+      cbn. cbv [invar_cc].
+      change (
+          SOS
+            (Inter (Pcarre (i + S j))
+               [S i; S (i + i + i * i); S (S (S (i + i)))])
+            (Inter (Pcarre (i + S j)) [S i; S i * S i; S (S i + S i)])
+        ).
+      rewrite <- Sn_2.
+      rewrite <- Sn_carre.
+      apply SOS_stop.
+Qed.
+
+Theorem SOS_Pcarre_n_fin_V1 :
+  forall n,
+    SOS (Inter (Pcarre n) [0;0;1]) (Final (invar_cc n)).
+Proof.
+  intro n.
+  destruct n.
+  - cbv [invar_cc]; cbn.
+    apply SOS_Pcarre_n_fini.
+  - change (SOS (Inter (Pcarre (1 + n)) [0; 0; 1]) (Final (invar_cc (1 + n)))).
+    Search (_ + _ = _ + _).
+    rewrite Nat.add_comm.
+    eapply SOS_trans.
+    + apply SOS_Pcarre_n_i_plus.
+    + eapply SOS_again.
+      { apply SOS1_While. }
+      eapply SOS_again.
+      { apply SOS1_If_true. cbn.  apply util1.}
+      eapply SOS_again.
+      { eapply SOS1_Seqi. cbv [corps_carre].
+        eapply SOS1_Seqf. cbv [incrI].
+        apply SOS1_Assign. }
+      cbn.
+      eapply SOS_again.
+      { eapply SOS1_Seqi. eapply SOS1_Seqf.
+        apply SOS1_Assign. }
+      cbn.
+      eapply SOS_again.
+      { eapply SOS1_Seqf. apply SOS1_Assign. }
+      cbn. 
+      rewrite <- Sn_2.
+      rewrite <- Sn_carre.
+      change (
+          SOS
+            (Inter (Pcarre (n + 1))
+               (invar_cc (S n)))
+            (Final  (invar_cc (n+1)))
+        ).
+      rewrite Nat.add_comm.
+      cbn.
+      apply SOS_Pcarre_n_fini.
+Qed.
+
