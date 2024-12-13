@@ -404,6 +404,19 @@ Proof.
       apply h2.
 Qed.
 
+(*
+Fixpoint SOS_seqf i1 i2 s1 s2 (so : SOS (Inter i1 s1) (Final s2)) :
+  SOS (Inter (Seq i1 i2) s1) (Inter i2 s2).
+
+La propriété indiquée par le théorème SOS_seqf nous inque que si
+depuis l'était intermédiare s1 avec le code i1 on arrive à l'état final s2
+alors on peut depuis l'état intermédiare s1 avec le code i1 arriver à un
+état intermédiare s2 avec le code i2.
+
+En plus vulgarisé ça signifie que si d'un point A on peut aller à un point
+d'arrivée B alors on peut s'arreter au point non final B
+*)
+
 
 (*=====================================Exercice 3.1.2=====================================*)
 
@@ -536,8 +549,15 @@ Proof. ring. Qed.
 
 Definition invar_cc n := [n; n*n; S (n+n)].
 
+(* pour tout n, en partant de x = n, y = n*n et z = n+n+1
+en executant "corps_carre" on peut atteindre l'état final
+x = n+1, y = (n+1)*(n+1) et z = n+1+n+1+1
 
-(* donner signification *)
+en plus vulgaire cela signifie que corps carré permet
+ - d'augmenter x de 1
+ - de faire passer y au carré de l'entier suivant
+ - d'augmenter z de 2
+ *)
 Theorem SOS_corps_carre n : SOS (Inter corps_carre (invar_cc n)) (Final (invar_cc (S n))).
 Proof.
   cbv [invar_cc corps_carre].
@@ -554,7 +574,14 @@ Proof.
   apply SOS_stop.
 Qed.
 
-(* donner signification *)
+(*
+  pour tout n et pour tout i
+  si notre programme est une sequence contenant corps_carre
+  puis i, alors en partant de l'état x = n, y = n*n et z = n+n+1
+  on peut atteindre l'état
+  x = n+1, y = (n+1)*(n+1) et z = n+1+n+1+1
+  en ayant encore i a executer.
+ *)
 Lemma SOS_corps_carre_inter n i :
   SOS (Inter (Seq corps_carre i) (invar_cc n)) (Inter i (invar_cc (S n))).
 Proof.
@@ -562,7 +589,20 @@ Proof.
   apply SOS_corps_carre.  
 Qed.
 
-(* donner signification *)
+(*
+  pour tout n et pout tout i
+  si i est différent de n alors en partant de l'état
+  x = i, y = i*i et z = i+i+1
+  et en executant (Pcarre n), on peut atteindre l'état
+  x = i+1, y = (i+1)*(i+1) et z = i+1+i+1+1
+  en ayant encore (Pcarre n) a executer.
+
+  En fait ce qu'on prouve c'est que si i et n sont différent
+  alors l'exectution de (Pcarre n) est équivalente à celle
+  de corps_carre (logique car c'est un while)
+
+  On peut aussi dire que c'est le "début" de l'execution de Pcarre n
+ *)
 Lemma SOS_Pcarre_tour :
   forall n i, eqnatb i n = false ->
   SOS (Inter (Pcarre n) (invar_cc i)) (Inter (Pcarre n) (invar_cc (S i))).
@@ -579,11 +619,15 @@ Lemma eqnatb_refl : forall n, eqnatb n n = true.
 Proof.
   intro n.
   induction n.
-  - cbn; reflexivity.
-  - cbn; apply IHn.
+  - cbn. reflexivity.
+  - cbn. apply IHn.
 Qed.
 
-(* donner signification *)
+(*
+  Ici on prouve que si x = n alors la boucle de (Pcarre n) s'arrête
+
+  On peut aussi dire que c'est la "fin" de l'execution de (Pcarre n)
+ *)
 Theorem SOS_Pcarre_n_fini :
   forall n, SOS (Inter (Pcarre n) (invar_cc n)) (Final (invar_cc n)).
 Proof.
@@ -602,14 +646,42 @@ Theorem SOS_Pcarre_2_fin_V2 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
   eapply SOS_trans.
   { apply SOS_Pcarre_tour. reflexivity. }
+  (* ci dessus on fait un premier tour de la boucle de Pcarre_2
+     pour ça, on utilise SOS_trans qui nous dit que si on peut aller
+     de A à B et de B à C alors on peut aller de A à C
+     (avec A B et C des config)
+     on doit donc trouver une config B qui satisfie ces conditions.
+     Avec SOS_Pcarre_tour on dit que ce B est un état intermédiare
+     avec x,y et z valant (invar_cc 1) et ou on doit executer
+     (Pcarre 2) qui est équivalent à Pcarre_2.
+   *)
   eapply SOS_trans.
   { apply SOS_Pcarre_tour. reflexivity. }
+  (* on réutilise le meme principe pour faire un tour de boucle
+     supplémentaire    
+   *)
   eapply SOS_trans.
   { apply SOS_Pcarre_n_fini. }
+  (* enfin on utilise encore SOS_trans mais cette fois avec
+     SOS_Pcarre_n_fini qui executer le cas ou la condition du
+     while est fausse.
+   *)
   apply SOS_stop.
 Qed.
 
-(* donner signification *)
+(* ce Lemme nous apprends que pour tout i
+   en partant de l'état
+   x = i, y = i*i et z = i+i+1
+   et en executant (Pcarre_inf), on peut atteindre l'état
+   x = i+1, y = (i+1)*(i+1) et z = i+1+i+1+1
+   ou on doit encore executer Pcarre_inf.
+
+   autrement dit, Pcarre_inf permet
+   - d'augmenter x de 1
+   - de faire passer y au carré de l'entier suivant
+   - d'augmenter z de 2
+   et d'avoir encore Pcarre_inf a executer
+*)
 Lemma SOS_Pcarre_inf_tour :
   forall i,
   SOS (Inter Pcarre_inf (invar_cc i)) (Inter Pcarre_inf (invar_cc (S i))).
@@ -622,7 +694,12 @@ Proof.
   apply SOS_corps_carre_inter.
 Qed.
 
-(* donner signification *)
+(* ce lemme nous informe que en partant de l'etat
+   x = 0, y = 0, z = 1
+   on peut atteindre un etat où pour tout i
+   x = i, y = i*i, z = i+i+1
+   en executant Pcarre_inf
+*)
 Theorem SOS_Pcarre_inf_i :
   forall i,
   SOS (Inter Pcarre_inf [0; 0; 1]) (Inter Pcarre_inf (invar_cc i)).
@@ -786,3 +863,265 @@ Proof.
       apply SOS_Pcarre_n_fini.
 Qed.
 
+(*=====================Partie 3.9 : Compilation d’expressions arithmétiques===============*)
+
+
+(** * Un état pour faire des tests *)
+
+Definition S2 := [0; 3].
+
+
+(* ----------------   Compilation de aexp   ----------------------- *)
+(* On va maintenant compiler le langage aexp vers un langage d'assemblage
+   à pile et montrer la correction du compilateur.
+   Nous définissons : - le langage cible d'assemblage (CODE)
+                      - sa sémantique (exec)
+                      - le compilateur (compileA)
+ *)
+
+(* Langage d'assemblage à pile (als) *)
+
+Inductive instr_als : Set :=
+  | Ipush : nat -> instr_als
+  | Ifetch : nat -> instr_als
+  | Iadd :  instr_als
+  | Isub :  instr_als
+  | Imul :  instr_als.
+
+(* Un code est une liste d'instruction *)
+
+Definition CODE := list instr_als.
+
+(* Sémantique fonctionnelle (dénotationnelle) du langage  *)
+
+(* La pile de valeurs sur lesquelles travaille le jeu d'instructions
+   est représentée par une liste.
+   Empiler 2 puis empiler 5 sur la pile vide donne 5 :: 2 :: nil.
+*)
+
+Definition stack := list nat.
+
+Definition push n : stack -> stack := fun st => n :: st.
+
+(* L'exécution générique d'un opérateur binaire qui prend l'opérateur en paramètre
+   Il rend nil si la liste a moins de 2 entiers *)
+
+Definition exec_opbin (op : nat -> nat -> nat) : stack -> stack :=
+  fun s => match s with
+           | b :: a :: s => op a b :: s
+           | _ => nil
+           end.
+
+(* Sémantique fonctionnelle d'une instruction     *)
+
+Definition exec_i (i : instr_als) (s:state) : stack -> stack :=
+  match i with
+  | Ipush n => push n
+  | Ifetch x => push (get x s)
+  | Iadd => exec_opbin Nat.add
+  | Isub => exec_opbin Nat.sub
+  | Imul => exec_opbin Nat.mul
+  end.
+
+(* Sémantique fonctionnelle d'un code c-a-d d'une suite d'instructions *)
+
+Fixpoint exec (c : CODE) (s:state) (p:stack): stack :=
+    match c with
+      | nil => p
+      | i :: c' =>
+        let p' := (exec_i i s p) in (* On exécute i en partant de la pile p *)
+        exec c' s p'                (* Puis on exécute le reste *)
+    end.
+
+(* On peut composer les executions de codes comme suit *)
+(* Variante bavarde et maladroite du théorème dec_code, qui est celui à garder *)
+
+Lemma comp_exec : forall c1 c2 s p1 p2 p3,
+                  exec c1 s p1 = p2
+               -> exec c2 s p2 = p3
+               -> exec (c1++c2) s p1 = p3.
+Proof.    
+  (* à compléter, optionnel *)
+Admitted.
+
+(* L'exécution d'un code peut être peut être décomposée arbitrairement *)
+(* Attention à la récurrence généralisée. *)
+Lemma dec_code :  forall c1 c2 s p, exec (c1++c2) s p = exec c2 s (exec c1 s p).
+Proof.
+  intros c1 c2 s.
+  induction c1 as [| i1 c1 Hrec_c1]; simpl; intro p.
+  - reflexivity.
+  - eapply Hrec_c1.
+Qed.    
+
+
+(*
+Compiler une expression arithmétique consiste à concaténer la compilation
+des sous-expressions. Par exemple, compiler Apl a1 a2  consiste à concaténer
+le code compilé de a1 au code de a2 et enfin à l'instruction Iadd.
+*)
+
+Fixpoint compileA (a : aexp) : CODE :=
+  match a with
+    | Aco n      => [Ipush n]
+    | Ava x      => [Ifetch x]
+    | Apl a1 a2  => compileA a1 ++ compileA a2 ++ [Iadd]
+    | Amu a1 a2  => compileA a1 ++ compileA a2 ++ [Imul]
+    | Amo a1 a2  => compileA a1 ++ compileA a2 ++ [Isub]
+  end.
+
+(* Exemples d'expressions arithmétiques *)
+
+Definition ae2px := Apl (Aco 2) X. (* 2 + x *)
+Definition ae9m2px := Amo (Aco 9) ae2px. (* 9 - (2 + x) *)
+
+(* Exemples de code compilés *)
+
+Compute (compileA ae2px).
+Compute ae9m2px.
+Compute (compileA ae9m2px).
+Compute exec [Ipush 9; Ipush 2; Ifetch 1; Iadd; Isub] nil.
+
+(* Exemples d'exécutions de code
+   avec une pile initiale vide et un état S2 ou x vaut 3
+*)
+
+
+Compute exec (compileA (Aco 2)) S2 nil.
+Compute exec (compileA ae2px) S2 nil.
+Compute exec (compileA ae9m2px) S2 nil.
+
+
+(*
+  Théorème de correction de la compilation.
+  Version générale quelle que soit la pile de départ.
+*)
+
+Theorem correct_compileA_allp :
+  forall (a : aexp) (s : state) (p:stack),
+    exec (compileA a) s p = exec [Ipush (evalA a s)] s p.
+Proof.
+  induction a as [n | x | a1 Ha1 a2 Ha2 | a1 Ha1 a2 Ha2 | a1 Ha1 a2 Ha2]; intros s p; cbn.
+  - reflexivity.
+  - reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite Ha1.
+    rewrite Ha2.
+    cbn.
+    reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite Ha1.
+    rewrite Ha2.
+    cbn.
+    reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite Ha1.
+    rewrite Ha2.
+    cbn.
+    reflexivity.
+Qed.
+
+(* La sémantique fonctionnelle (avec une pile vide) d'un code obtenu
+   par compilation de a est égale à la fonction qui empile la
+   sémantique fonctionnelle de a.
+*)
+
+Corollary correct_compileA : forall (a : aexp) (s:state),
+                             exec (compileA a) s [] = [evalA a s].
+Proof.
+  intros a s.
+  induction a; cbn.
+  - reflexivity.
+  - reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite IHa1.
+    rewrite correct_compileA_allp.
+    cbn.
+    reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite IHa1.
+    rewrite correct_compileA_allp.
+    cbn.
+    reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite IHa1.
+    rewrite correct_compileA_allp.
+    cbn.
+    reflexivity.    
+Qed.
+
+
+(* La propriété suivante affirme qu'on peut ajouter des valeurs en fond
+   de pile sans influer sur l'exécution du code.
+
+Lemma app_stack :forall c s p1 p1' p2, exec c s p1 = p1' -> exec c s (p1 ++ p2) = p1'++p2.
+
+ou en utilisant une formulation équivalente plus concise
+
+Lemma app_stack :forall c s p1 p2, exec c s (p1 ++ p2) = (exec c s p1)++p2.
+
+Mais cette propriété est fausse ! *)
+
+(* Trouvez un contre exemple. *)
+
+Fact wrong_app_stack : exists c s p1 p2, exec c s (p1 ++ p2) <> (exec c s p1) ++ p2.
+  eexists. (* à remplacer par 'exists c' où est le programme de votre contre exemple *)
+  eexists. (* idem pour l'état, *)
+  eexists. (* p1 *)
+  eexists. (* et p2 *)
+  simpl; intro H.
+  Fail discriminate (* si on a donné les bons témoins, discriminate passe *).
+Admitted.
+
+
+(* On peut montrer que la propriété app_stack, fausse en général,
+   est vraie pour le code compilé. *)
+
+(* On pourra utiliser la propriété triviale suivante *)
+Remark app_comm_cons {A} : forall (x y:list A) (a:A), a :: (x ++ y) = (a :: x) ++ y.
+Proof. reflexivity. Qed.
+                                                                               
+Lemma app_stack : forall a s p1 p2,
+    exec (compileA a) s (p1++p2) = (exec (compileA a) s p1)++p2.
+Proof.
+  intros.
+  induction a; cbn.
+  - reflexivity.
+  - reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite dec_code.
+    rewrite dec_code.
+    rewrite correct_compileA_allp.
+    rewrite correct_compileA_allp.    
+    rewrite correct_compileA_allp.
+    rewrite correct_compileA_allp.    
+    cbn.
+    reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite dec_code.
+    rewrite dec_code.
+    rewrite correct_compileA_allp.
+    rewrite correct_compileA_allp.    
+    rewrite correct_compileA_allp.
+    rewrite correct_compileA_allp.    
+    cbn.
+    reflexivity.
+  - rewrite dec_code.
+    rewrite dec_code.
+    rewrite dec_code.
+    rewrite dec_code.
+    rewrite correct_compileA_allp.
+    rewrite correct_compileA_allp.    
+    rewrite correct_compileA_allp.
+    rewrite correct_compileA_allp.    
+    cbn.
+    reflexivity.
+Qed.
