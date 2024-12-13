@@ -1,5 +1,10 @@
 # Explications du contenu des fichiers.
 
+Ceci est le fichier README du rendu de ltpf de
+BERNARD Pierre
+MERCIER Chloé
+MILLET Arthur
+
 ## Partie Ocaml
 
 Dans le fichier `ocaml.ml` vous trouverez les exercices :
