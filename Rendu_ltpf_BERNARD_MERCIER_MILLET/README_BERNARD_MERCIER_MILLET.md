@@ -40,21 +40,21 @@ Dans le fichier `coq.v` vous trouverez les exercices :
 
 # Qui a traité quelle question :
 
- - 1.1.1
- - 1.1.2 à 1.1.4
- - 1.2.1
- - partie 2.1
- - partie 2.2
- - 2.3.1
- - 2.3.2
- - 2.3.3
- - 3.1.1
- - 3.1.2
- - 3.1.3
- - 3.1.4
- - 3.8.1
- - 3.8.3
- - partie 3.9
+ - 1.1.1 ----------- BERNARD MERCIER MILLET
+ - 1.1.2 à 1.1.4 --- BERNARD MERCIER MILLET 
+ - 1.2.1 ----------- MILLET
+ - partie 2.1 ------ BERNARD
+ - partie 2.2 ------ MERCIER MILLET
+ - 2.3.1 ----------- BERNARD MERCIER MILLET
+ - 2.3.2 ----------- BERNARD MERCIER MILLET
+ - 2.3.3 ----------- BERNARD MERCIER MILLET
+ - 3.1.1 ----------- BERNARD MERCIER MILLET
+ - 3.1.2 ----------- BERNARD MERCIER MILLET
+ - 3.1.3 ----------- BERNARD MERCIER MILLET
+ - 3.1.4 ----------- BERNARD MERCIER 
+ - 3.8.1 ----------- BERNARD MERCIER MILLET
+ - 3.8.3 ----------- BERNARD MERCIER 
+ - partie 3.9 ------ MILLET
 
 
 # Analyse syntaxique et sémantique
