@@ -36,11 +36,3 @@ $$\frac{[expr]_{s1} = \text{false  s1} \xrightarrow{\text{else Q}} s3 }{s1 \xrig
 
 $$\frac{[expr]_{s1} = \text{true  s1} \xrightarrow{\text{then P}} s2 }{s1 \xrightarrow{\text{If expr then P else Q}} s2}$$
 
-
-## Exercice 2.1.1
-
-(flemme)
-
-## Exercice 2.1.2
-
-(voir programmes While)
