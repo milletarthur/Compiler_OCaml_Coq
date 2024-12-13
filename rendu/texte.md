@@ -1,3 +1,18 @@
+# Explications du contenu des fichiers.
+
+## Partie Ocaml
+
+Dans le fichier `ocaml.ml` vous trouverez les exercices :
+ - 1.1.1
+ - 2.1
+ - 2.2
+
+Dans le fichier `test.ml` vous trouverez un petit programme qui lance des tests.
+Pour s'assurer que les tests se lancent bien il est nécessaire de changer le chemin d'accès aux tests
+
+Les programmes de tests sont fournis dans le dossier prog_while
+
+
 # Analyse syntaxique et sémantique
 
 ## Exercice 1.1.2 - 1.1.4

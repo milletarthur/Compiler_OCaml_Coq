@@ -7,7 +7,7 @@ type assign = var * exp;;
 type programme = Skip | Assign of assign | Sequence of programme*programme | If of exp*programme*programme | While of exp*programme;;
 
 
-(*=====================================Exercice 1.2.1=====================================*)
+(*=====================================Exercice 2.1=====================================*)
 #use "anacomb.ml";;
 
 let digit_ananlist = fun (c:char) : bool -> c = '0' || c = '1';;
@@ -130,7 +130,7 @@ let _ = assert ((expression (list_of_string "a+b+(!c)"))
                 = (expression (list_of_string "(a+b)+(!c)")));
 
   
-(*=====================================Exercice 2.2.1=====================================*)
+(*=====================================Exercice 2.2=====================================*)
 
 type value = Exp of exp | Uninitialised;;
 type state = value list;;
