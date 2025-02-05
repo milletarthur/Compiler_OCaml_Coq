@@ -1,7 +1,7 @@
 #use "ocaml.ml";;
 
 (*Pour tester, changer le chemin d'accès*)
-let chemin = "/home/tutur/Documents/Polytech/INFO4/programmation\ fonctionnelle/projet_ltpf/prog_while/prog_correct/";;
+let chemin = "/home/......../prog_while/prog_correct/";;
 let filename = "prog1.w";;
 let file = chemin ^ filename;; (* Concaténer les chaînes avec ^ *)
 
